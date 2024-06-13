@@ -1894,6 +1894,9 @@ ssl3_TLSPRFWithMasterSecret(sslSocket *ss, ssl3CipherSpec *spec,
 extern void
 ssl3_RecordKeyLog(sslSocket *ss, const char *label, PK11SymKey *secret);
 
+extern void
+ssl3_WriteKeyLog(sslSocket *ss, const char *label, PRUint8 *secret, PRUint32 length);
+
 PRBool ssl_AlpnTagAllowed(const sslSocket *ss, const SECItem *tag);
 
 #ifdef TRACE

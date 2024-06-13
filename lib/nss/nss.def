@@ -1270,3 +1270,9 @@ SECKEY_PrivateKeyStrengthInBits;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.102 { 	# NSS 3.102 release
+;+    global:
+PK11_HPKE_SharedSecret;
+;+    local:
+;+       *;
+;+};

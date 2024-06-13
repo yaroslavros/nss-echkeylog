@@ -778,6 +778,7 @@ void PK11_HPKE_DestroyContext(HpkeContext *cx, PRBool freeit);
 SECStatus PK11_HPKE_ExportContext(const HpkeContext *cx, PK11SymKey *wrapKey, SECItem **serialized);
 SECStatus PK11_HPKE_ExportSecret(const HpkeContext *cx, const SECItem *info, unsigned int L,
                                  PK11SymKey **outKey);
+SECStatus PK11_HPKE_SharedSecret(const HpkeContext *cx, PK11SymKey **outKey);
 const SECItem *PK11_HPKE_GetEncapPubKey(const HpkeContext *cx);
 HpkeContext *PK11_HPKE_ImportContext(const SECItem *serialized, PK11SymKey *wrapKey);
 SECStatus PK11_HPKE_Open(HpkeContext *cx, const SECItem *aad, const SECItem *ct, SECItem **outPt);
