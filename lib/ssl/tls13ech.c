@@ -2303,6 +2303,7 @@ loser:
 void
 tls13_EchKeyLog(sslSocket *ss)
 {
+#ifdef NSS_ALLOW_SSLKEYLOGFILE
     PK11SymKey *shared_secret;
     HpkeContext *cx;
     sslEchConfig *cfg = NULL;
@@ -2314,6 +2315,7 @@ tls13_EchKeyLog(sslSocket *ss)
         ssl3_RecordKeyLog(ss, keylogLabelECHSecret, shared_secret);
         ssl3_WriteKeyLog(ss, keylogLabelECHConfig, cfg->raw.data, cfg->raw.len);
     }
+#endif
 }
 
 SECStatus
