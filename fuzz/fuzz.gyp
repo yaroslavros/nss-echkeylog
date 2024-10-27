@@ -7,7 +7,7 @@
   ],
   'target_defaults': {
     'variables': {
-      'debug_optimization_level': '2',
+      'debug_optimization_level': '3',
     },
     'cflags_cc': [
         '-Wno-vla-extension',
@@ -44,6 +44,7 @@
         '<(DEPTH)/lib/util/util.gyp:nssutil',
         '<(DEPTH)/lib/nss/nss.gyp:nss_static',
         '<(DEPTH)/lib/pkcs7/pkcs7.gyp:pkcs7',
+        '<(DEPTH)/lib/pkcs12/pkcs12.gyp:pkcs12',
         # This is a static build of pk11wrap, softoken, and freebl.
         '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap_static',
         '<(DEPTH)/lib/libpkix/libpkix.gyp:libpkix',
@@ -102,6 +103,18 @@
       },
     },
     {
+      'target_name': 'nssfuzz-pkcs7',
+      'type': 'executable',
+      'sources': [
+        'asn1_mutators.cc',
+        'pkcs7_target.cc',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'fuzz_base',
+      ],
+    },
+    {
       'target_name': 'nssfuzz-pkcs8',
       'type': 'executable',
       'sources': [
@@ -109,6 +122,19 @@
         'pkcs8_target.cc',
       ],
       'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'fuzz_base',
+      ],
+    },
+    {
+      'target_name': 'nssfuzz-pkcs12',
+      'type': 'executable',
+      'sources': [
+        'asn1_mutators.cc',
+        'pkcs12_target.cc',
+      ],
+      'dependencies': [
+        '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
         '<(DEPTH)/exports.gyp:nss_exports',
         'fuzz_base',
       ],
@@ -318,7 +344,7 @@
         'tls_client_target.cc',
       ],
       'defines': [
-        'IS_DTLS'
+        'IS_DTLS_FUZZ'
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
@@ -335,7 +361,7 @@
         'tls_server_target.cc',
       ],
       'defines': [
-        'IS_DTLS'
+        'IS_DTLS_FUZZ'
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
@@ -350,7 +376,9 @@
         'nssfuzz-certDN',
         'nssfuzz-dtls-client',
         'nssfuzz-dtls-server',
+        'nssfuzz-pkcs7',
         'nssfuzz-pkcs8',
+        'nssfuzz-pkcs12',
         'nssfuzz-quickder',
         'nssfuzz-tls-client',
         'nssfuzz-tls-server',

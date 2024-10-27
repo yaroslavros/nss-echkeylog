@@ -8,6 +8,13 @@ Releases
    :glob:
    :hidden:
 
+   nss_3_106.rst
+   nss_3_104.rst
+   nss_3_103.rst
+   nss_3_102_1.rst
+   nss_3_102.rst
+   nss_3_101.2.rst
+   nss_3_101_1.rst
    nss_3_101.rst
    nss_3_100.rst
    nss_3_99.rst
@@ -19,8 +26,12 @@ Releases
    nss_3_94.rst
    nss_3_93.rst
    nss_3_92.rst
-   nss_3_91_0.rst
-   nss_3_90_0.rst
+   nss_3_91.rst
+   nss_3_90_4.rst
+   nss_3_90_3.rst
+   nss_3_90_2.rst
+   nss_3_90_1.rst
+   nss_3_90.rst
    nss_3_89_1.rst
    nss_3_89.rst
    nss_3_88_1.rst
@@ -66,42 +77,32 @@ Releases
 
 .. note::
 
-   **NSS 3.101** is the latest version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_101_release_notes`
+   **NSS 3.106** is the latest version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_106_release_notes`
 
-   **NSS 3.90.2 (ESR)** is the latest version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_90_2_release_notes`
+   **NSS 3.101.2 (ESR)** is the latest ESR version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_101_1_release_notes`
 
 .. container::
 
-   Changes in 3.101 included in this release:
+   Changes in 3.106 included in this release:
 
-   - Bug 1900413 - add diagnostic assertions for SFTKObject refcount. 
-   - Bug 1899759 - freeing the slot in DeleteCertAndKey if authentication failed
-   - Bug 1899883 - fix formatting issues. 
-   - Bug 1889671 - Add Firmaprofesional CA Root-A Web to NSS.
-   - Bug 1899593 - remove invalid acvp fuzz test vectors. 
-   - Bug 1898830 - pad short P-384 and P-521 signatures gtests.
-   - Bug 1898627 - remove unused FreeBL ECC code. r=rrelyea
-   - Bug 1898830 - pad short P-384 and P-521 signatures. 
-   - Bug 1898825 - be less strict about ECDSA private key length. 
-   - Bug 1854439 - Integrate HACL* P-521. 
-   - Bug 1854438 - Integrate HACL* P-384. 
-   - Bug 1898074 - memory leak in create_objects_from_handles. 
-   - Bug 1898858 - ensure all input is consumed in a few places in mozilla::pkix 
-   - Bug 1884444 - SMIME/CMS and PKCS #12 do not integrate with modern NSS policy 
-   - Bug 1748105 - clean up escape handling 
-   - Bug 1896353 - Use lib::pkix as default validator instead of the old-one 
-   - Bug 1827444 - Need to add high level support for PQ signing.
-   - Bug 1548723 - Certificate Compression: changing the allocation/freeing of buffer + Improving the documentation 
-   - Bug 1884444 - SMIME/CMS and PKCS #12 do not integrate with modern NSS policy
-   - Bug 1893404 - Allow for non-full length ecdsa signature when using softoken
-   - Bug 1830415 - Modification of .taskcluster.yml due to mozlint indent defects
-   - Bug 1793811 - Implement support for PBMAC1 in PKCS#12 
-   - Bug 1897487 - disable VLA warnings for fuzz builds.
-   - Bug 1895032 - remove redundant AllocItem implementation. 
-   - Bug 1893334 - add PK11_ReadDistrustAfterAttribute. 
-   - Bug 215997  - Clang-formatting of SEC_GetMgfTypeByOidTag update
-   - Bug 1895012 - Set SEC_ERROR_LIBRARY_FAILURE on self-test failure
-   - Bug 1894572 - sftk_getParameters(): Fix fallback to default variable after error with configfile. 
-   - Bug 1830415 - Switch to the mozillareleases/image_builder image
+   - Bug 1925975 - NSS 3.106 should be distributed with NSPR 4.36.
+   - Bug 1923767 - pk12util: improve error handling in p12U_ReadPKCS12File.
+   - Bug 1899402 - Correctly destroy bulkkey in error scenario.
+   - Bug 1919997 - PKCS7 fuzz target, r=djackson,nss-reviewers.
+   - Bug 1923002 - Extract certificates with handshake collection script.
+   - Bug 1923006 - Specify len_control for fuzz targets.
+   - Bug 1923280 - Fix memory leak in dumpCertificatePEM.
+   - Bug 1102981 - Fix UBSan errors for SECU_PrintCertificate and SECU_PrintCertificateBasicInfo.
+   - Bug 1921528 - add new error codes to mozilla::pkix for Firefox to use.
+   - Bug 1921768 - allow null phKey in NSC_DeriveKey.
+   - Bug 1921801 - Only create seed corpus zip from existing corpus.
+   - Bug 1826035 - Use explicit allowlist for for KDF PRFS.
+   - Bug 1920138 - Increase optimization level for fuzz builds.
+   - Bug 1920470 - Remove incorrect assert.
+   - Bug 1914870 - Use libFuzzer options from fuzz/options/\*.options in CI.
+   - Bug 1920945 - Polish corpus collection for automation.
+   - Bug 1917572 - Detect new and unfuzzed SSL options.
+   - Bug 1804646 - PKCS12 fuzzing target.
+

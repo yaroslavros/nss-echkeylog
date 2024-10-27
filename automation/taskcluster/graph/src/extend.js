@@ -35,12 +35,6 @@ const FUZZ_IMAGE = {
   path: "automation/taskcluster/docker-fuzz"
 };
 
-// Bug 1488148 - temporary image for fuzzing 32-bit builds.
-const FUZZ_IMAGE_32 = {
-  name: "fuzz32",
-  path: "automation/taskcluster/docker-fuzz32"
-};
-
 const WINDOWS_CHECKOUT_CMD =
   "bash -c \"hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss || " +
     "(sleep 2; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss) || " +
@@ -345,7 +339,7 @@ async function scheduleMac(name, base, args = "") {
   let build_base_without_command_symbol = merge(mac_base, {
     maxRunTime: 7200,
     artifacts: [{
-      expires: 24 * 7,
+      expires: 24 * (process.env.MOZ_SCM_LEVEL == "3" ? 90 : 7),
       type: "directory",
       path: "public"
     }],
@@ -415,7 +409,7 @@ async function scheduleLinux(name, overrides, args = "") {
   let artifacts_and_kind = {
     artifacts: {
       public: {
-        expires: 24 * 7,
+        expires: 24 * (process.env.MOZ_SCM_LEVEL == "3" ? 90 : 7),
         type: "directory",
         path: "/home/worker/artifacts"
       }
@@ -641,7 +635,7 @@ async function scheduleLinux(name, overrides, args = "") {
 
 /*****************************************************************************/
 
-function scheduleFuzzingRun(base, name, target, max_len, symbol = null, corpus = null) {
+function scheduleFuzzingRun(base, name, target, symbol = null, corpus = null) {
   const MAX_FUZZ_TIME = 300;
 
   queue.scheduleTask(merge(base, {
@@ -650,9 +644,8 @@ function scheduleFuzzingRun(base, name, target, max_len, symbol = null, corpus =
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
-        `${target} nss/fuzz/corpus/${corpus || target} ` +
-        `-max_total_time=${MAX_FUZZ_TIME} ` +
-        `-max_len=${max_len}`
+        `${target} ${corpus || target} ` +
+        `-max_total_time=${MAX_FUZZ_TIME} `
     ],
     provisioner: "nss-t",
     workerType: "t-linux-xlarge-gcp",
@@ -686,7 +679,7 @@ async function scheduleFuzzing() {
     ],
     artifacts: {
       public: {
-        expires: 24 * 7,
+        expires: 24 * (process.env.MOZ_SCM_LEVEL == "3" ? 90 : 7),
         type: "directory",
         path: "/home/worker/artifacts"
       }
@@ -731,36 +724,38 @@ async function scheduleFuzzing() {
 
   // Schedule fuzzing runs.
   let run_base = merge(base, {parent: task_build, kind: "test"});
-  scheduleFuzzingRun(run_base, "CertDN", "certDN", 4096);
-  scheduleFuzzingRun(run_base, "QuickDER", "quickder", 10000);
+  scheduleFuzzingRun(run_base, "CertDN", "certDN");
+  scheduleFuzzingRun(run_base, "PKCS7", "pkcs7");
+  scheduleFuzzingRun(run_base, "PKCS12", "pkcs12");
+  scheduleFuzzingRun(run_base, "QuickDER", "quickder");
 
   // Schedule MPI fuzzing runs.
   let mpi_base = merge(run_base, {group: "MPI"});
   let mpi_names = ["add", "addmod", "div", "mod", "mulmod", "sqr",
                    "sqrmod", "sub", "submod"];
   for (let name of mpi_names) {
-    scheduleFuzzingRun(mpi_base, `MPI (${name})`, `mpi-${name}`, 4096, name);
+    scheduleFuzzingRun(mpi_base, `MPI (${name})`, `mpi-${name}`, name);
   }
-  scheduleFuzzingRun(mpi_base, `MPI (invmod)`, `mpi-invmod`, 256, "invmod");
-  scheduleFuzzingRun(mpi_base, `MPI (expmod)`, `mpi-expmod`, 2048, "expmod");
+  scheduleFuzzingRun(mpi_base, `MPI (invmod)`, `mpi-invmod`, "invmod");
+  scheduleFuzzingRun(mpi_base, `MPI (expmod)`, `mpi-expmod`, "expmod");
 
   // Schedule TLS fuzzing runs (non-fuzzing mode).
   let tls_base = merge(run_base, {group: "TLS"});
-  scheduleFuzzingRun(tls_base, "TLS Client", "tls-client", 20000, "client-nfm",
+  scheduleFuzzingRun(tls_base, "TLS Client", "tls-client", "client-nfm",
                      "tls-client-no_fuzzer_mode");
-  scheduleFuzzingRun(tls_base, "TLS Server", "tls-server", 20000, "server-nfm",
+  scheduleFuzzingRun(tls_base, "TLS Server", "tls-server", "server-nfm",
                      "tls-server-no_fuzzer_mode");
-  scheduleFuzzingRun(tls_base, "DTLS Client", "dtls-client", 20000,
+  scheduleFuzzingRun(tls_base, "DTLS Client", "dtls-client",
                      "dtls-client-nfm", "dtls-client-no_fuzzer_mode");
-  scheduleFuzzingRun(tls_base, "DTLS Server", "dtls-server", 20000,
+  scheduleFuzzingRun(tls_base, "DTLS Server", "dtls-server",
                      "dtls-server-nfm", "dtls-server-no_fuzzer_mode");
 
   // Schedule TLS fuzzing runs (fuzzing mode).
   let tls_fm_base = merge(tls_base, {parent: task_build_tls});
-  scheduleFuzzingRun(tls_fm_base, "TLS Client", "tls-client", 20000, "client");
-  scheduleFuzzingRun(tls_fm_base, "TLS Server", "tls-server", 20000, "server");
-  scheduleFuzzingRun(tls_fm_base, "DTLS Client", "dtls-client", 20000, "dtls-client");
-  scheduleFuzzingRun(tls_fm_base, "DTLS Server", "dtls-server", 20000, "dtls-server");
+  scheduleFuzzingRun(tls_fm_base, "TLS Client", "tls-client", "client");
+  scheduleFuzzingRun(tls_fm_base, "TLS Server", "tls-server", "server");
+  scheduleFuzzingRun(tls_fm_base, "DTLS Client", "dtls-client", "dtls-client");
+  scheduleFuzzingRun(tls_fm_base, "DTLS Server", "dtls-server", "dtls-server");
 
   return queue.submit();
 }
@@ -778,7 +773,7 @@ async function scheduleFuzzing32() {
     features: ["allowPtrace"],
     platform: "linux32",
     collection: "fuzz",
-    image: FUZZ_IMAGE_32
+    image: FUZZ_IMAGE
   };
 
   // Build base definition.
@@ -791,7 +786,7 @@ async function scheduleFuzzing32() {
     ],
     artifacts: {
       public: {
-        expires: 24 * 7,
+        expires: 24 * (process.env.MOZ_SCM_LEVEL == "3" ? 90 : 7),
         type: "directory",
         path: "/home/worker/artifacts"
       }
@@ -836,35 +831,37 @@ async function scheduleFuzzing32() {
 
   // Schedule fuzzing runs.
   let run_base = merge(base, {parent: task_build, kind: "test"});
-  scheduleFuzzingRun(run_base, "CertDN", "certDN", 4096);
-  scheduleFuzzingRun(run_base, "QuickDER", "quickder", 10000);
+  scheduleFuzzingRun(run_base, "CertDN", "certDN");
+  scheduleFuzzingRun(run_base, "PKCS7", "pkcs7");
+  scheduleFuzzingRun(run_base, "PKCS12", "pkcs12");
+  scheduleFuzzingRun(run_base, "QuickDER", "quickder");
 
   // Schedule MPI fuzzing runs.
   let mpi_base = merge(run_base, {group: "MPI"});
   let mpi_names = ["add", "addmod", "div", "expmod", "mod", "mulmod", "sqr",
                    "sqrmod", "sub", "submod"];
   for (let name of mpi_names) {
-    scheduleFuzzingRun(mpi_base, `MPI (${name})`, `mpi-${name}`, 4096, name);
+    scheduleFuzzingRun(mpi_base, `MPI (${name})`, `mpi-${name}`, name);
   }
-  scheduleFuzzingRun(mpi_base, `MPI (invmod)`, `mpi-invmod`, 256, "invmod");
+  scheduleFuzzingRun(mpi_base, `MPI (invmod)`, `mpi-invmod`, "invmod");
 
   // Schedule TLS fuzzing runs (non-fuzzing mode).
   let tls_base = merge(run_base, {group: "TLS"});
-  scheduleFuzzingRun(tls_base, "TLS Client", "tls-client", 20000, "client-nfm",
+  scheduleFuzzingRun(tls_base, "TLS Client", "tls-client", "client-nfm",
                      "tls-client-no_fuzzer_mode");
-  scheduleFuzzingRun(tls_base, "TLS Server", "tls-server", 20000, "server-nfm",
+  scheduleFuzzingRun(tls_base, "TLS Server", "tls-server", "server-nfm",
                      "tls-server-no_fuzzer_mode");
-  scheduleFuzzingRun(tls_base, "DTLS Client", "dtls-client", 20000,
+  scheduleFuzzingRun(tls_base, "DTLS Client", "dtls-client",
                      "dtls-client-nfm", "dtls-client-no_fuzzer_mode");
-  scheduleFuzzingRun(tls_base, "DTLS Server", "dtls-server", 20000,
+  scheduleFuzzingRun(tls_base, "DTLS Server", "dtls-server",
                      "dtls-server-nfm", "dtls-server-no_fuzzer_mode");
 
   // Schedule TLS fuzzing runs (fuzzing mode).
   let tls_fm_base = merge(tls_base, {parent: task_build_tls});
-  scheduleFuzzingRun(tls_fm_base, "TLS Client", "tls-client", 20000, "client");
-  scheduleFuzzingRun(tls_fm_base, "TLS Server", "tls-server", 20000, "server");
-  scheduleFuzzingRun(tls_fm_base, "DTLS Client", "dtls-client", 20000, "dtls-client");
-  scheduleFuzzingRun(tls_fm_base, "DTLS Server", "dtls-server", 20000, "dtls-server");
+  scheduleFuzzingRun(tls_fm_base, "TLS Client", "tls-client", "client");
+  scheduleFuzzingRun(tls_fm_base, "TLS Server", "tls-server", "server");
+  scheduleFuzzingRun(tls_fm_base, "DTLS Client", "dtls-client", "dtls-client");
+  scheduleFuzzingRun(tls_fm_base, "DTLS Server", "dtls-server", "dtls-server");
 
   return queue.submit();
 }
@@ -890,7 +887,7 @@ async function scheduleWindows(name, base, build_script) {
 
   let artifacts_and_kind = {
     artifacts: [{
-      expires: 24 * 7,
+      expires: 24 * (process.env.MOZ_SCM_LEVEL == "3" ? 90 : 7),
       type: "directory",
       path: "public\\build"
     }],
@@ -1152,7 +1149,7 @@ async function scheduleTools() {
     },
     artifacts: {
       public: {
-        expires: 24 * 7,
+        expires: 24 * (process.env.MOZ_SCM_LEVEL == "3" ? 90 : 7),
         type: "directory",
         path: "/home/worker/artifacts"
       }
@@ -1183,7 +1180,7 @@ async function scheduleTools() {
     features: ["allowPtrace"],
     artifacts: {
       public: {
-        expires: 24 * 7,
+        expires: 24 * (process.env.MOZ_SCM_LEVEL == "3" ? 90 : 7),
         type: "directory",
         path: "/home/worker/artifacts"
       }
